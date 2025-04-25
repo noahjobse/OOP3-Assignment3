@@ -1,0 +1,25 @@
+duplicate words and numbers
+C:\OOP3\assignments\OOP3-Assignment3>java -jar WordTracker.jar res/test1.txt -pl
+? File processed and tree updated.
+hello
+  res/test1.txt: [1, 2, 1, 2]
+is
+  res/test1.txt: [1, 1]
+it's
+  res/test1.txt: [2, 2]
+kitty
+  res/test1.txt: [1, 2, 1, 2]
+meet
+  res/test1.txt: [2, 2]
+my
+  res/test1.txt: [1, 1]
+name
+  res/test1.txt: [1, 1]
+nice
+  res/test1.txt: [2, 2]
+to
+  res/test1.txt: [2, 2]
+you
+  res/test1.txt: [2, 2]
+
+REDO JAR FILE 

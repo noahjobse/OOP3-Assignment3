@@ -2,11 +2,10 @@ package appDomain;
 
 import implementations.BSTree;
 import utilities.BSTreeADT;
+import utilities.Iterator;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class WordTracker {
     private static final String REPO_FILE = "repository.ser";
@@ -18,8 +17,13 @@ public class WordTracker {
         }
 
         String inputFile = args[0];
+        String flag = args[1];
+        String outputFile = (args.length == 3 && args[2].startsWith("-f")) ? args[2].substring(2) : null;
+
+        // Load existing tree from repository
         BSTreeADT<Word> bst = loadTree();
 
+        // Parse input file and update tree
         try (BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
             String line;
             int lineNumber = 1;
@@ -45,8 +49,54 @@ public class WordTracker {
             return;
         }
 
+        System.out.println("File processed and tree updated.");
+
+        // === Output generation ===
+        Iterator<Word> iterator = bst.inorderIterator();
+        StringBuilder output = new StringBuilder();
+
+        while (iterator.hasNext()) {
+            Word word = iterator.next();
+            output.append(word.getWordText());
+
+            Map<String, List<Integer>> occurrences = word.getOccurrences();
+
+            if (flag.equals("-pf")) {
+                // Show filenames only
+                List<String> sortedFiles = new ArrayList<>(occurrences.keySet());
+                Collections.sort(sortedFiles);
+                output.append(" - ").append(sortedFiles);
+            } else if (flag.equals("-pl") || flag.equals("-po")) {
+                // Show filenames and line numbers (sorted alphabetically)
+                List<String> sortedFiles = new ArrayList<>(occurrences.keySet());
+                Collections.sort(sortedFiles);
+
+                for (String file : sortedFiles) {
+                    output.append("\n  ").append(file).append(": ").append(occurrences.get(file));
+                }
+
+                if (flag.equals("-po")) {
+                    output.append("\n  Total occurrences: ").append(word.getFrequency());
+                }
+            }
+
+            output.append("\n");
+        }
+
+        // === Output to file or console ===
+        if (outputFile != null) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+                writer.write(output.toString());
+                System.out.println("Output written to file: " + outputFile);
+            } catch (IOException e) {
+                System.err.println("Failed to write to output file: " + e.getMessage());
+            }
+        } else {
+            System.out.println(output.toString());
+        }
+
+        // Save updated tree at the very end
         saveTree(bst);
-        System.out.println("✅ File processed and tree updated.");
     }
 
     private static BSTreeADT<Word> loadTree() {
@@ -56,7 +106,7 @@ public class WordTracker {
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
             return (BSTreeADT<Word>) in.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("⚠️ Failed to load existing tree. Starting fresh.");
+            System.err.println("Failed to load existing tree. Starting fresh.");
             return new BSTree<>();
         }
     }
@@ -65,7 +115,7 @@ public class WordTracker {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(REPO_FILE))) {
             out.writeObject(tree);
         } catch (IOException e) {
-            System.err.println("⚠️ Failed to save tree: " + e.getMessage());
+            System.err.println("Failed to save tree: " + e.getMessage());
         }
     }
 }

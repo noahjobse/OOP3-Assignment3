@@ -14,10 +14,12 @@ public class Word implements Comparable<Word>, Serializable {
         this.occurrences = new HashMap<>();
     }
 
-    public void addOccurrence(String fileName, int lineNumber) {
-        occurrences.putIfAbsent(fileName, new ArrayList<>());
-        occurrences.get(fileName).add(lineNumber);
+    public void addOccurrence(String filename, int lineNumber) {
+        occurrences.putIfAbsent(filename, new ArrayList<>());
+        occurrences.get(filename).add(lineNumber); // add every time, even duplicates!
     }
+
+
 
     public String getWordText() {
         return wordText;
