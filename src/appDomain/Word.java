@@ -1,9 +1,8 @@
 /**
  * Word.java
  *
- * Defines a Word object that keeps track of the files and line numbers
- * where the word appears. Words are normalized to lowercase to ensure
- * consistent tracking and comparison.
+ * Represents a single word and tracks the occurrences of that word
+ * across multiple text files and line numbers.
  */
 
 package appDomain;
@@ -12,34 +11,29 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * Represents a single word and all its occurrences across multiple files.
+ * Models a word and its locations inside various files.
  */
 public class Word implements Comparable<Word>, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String wordText; // the text content of the word
-    private Map<String, List<Integer>> occurrences; // map of filenames to line numbers
+    private String wordText; // the actual word in lowercase
+    private Map<String, List<Integer>> occurrences; // maps filename to list of line numbers
 
     /**
-     * Creates a Word object with the given text.
-     * Precondition: wordText is not null.
-     * Postcondition: Word is initialized and stored in lowercase.
-     * 
-     * @param wordText the text of the word to store
+     * Constructs a new Word object and normalizes the text to lowercase.
+     * Precondition: wordText must not be null.
+     * Postcondition: wordText is stored in lowercase and occurrences map is initialized.
      */
     public Word(String wordText) {
-        this.wordText = wordText.toLowerCase();
+        this.wordText = wordText.toLowerCase(); // normalize to lowercase for consistent comparison
         this.occurrences = new HashMap<>();
     }
 
     /**
-     * Records a new appearance of the word.
-     * Precondition: filename is not null, lineNumber is a positive integer.
-     * During: If the file does not exist in the map, it is added.
-     * Postcondition: The line number is stored under the correct file.
-     * 
-     * @param filename the file where the word was found
-     * @param lineNumber the line number where the word appeared
+     * Adds an occurrence of the word for a specific file and line number.
+     * Precondition: filename is valid, lineNumber is positive.
+     * During: Adds the line number to the list for the corresponding file.
+     * Postcondition: The occurrence map is updated, allowing duplicates.
      */
     public void addOccurrence(String filename, int lineNumber) {
         occurrences.putIfAbsent(filename, new ArrayList<>());
@@ -47,46 +41,45 @@ public class Word implements Comparable<Word>, Serializable {
     }
 
     /**
-     * Retrieves the word text.
+     * Retrieves the text of the word.
      * Precondition: None.
-     * Postcondition: Returns the lowercase word text.
+     * Postcondition: Returns the lowercase version of the word text.
      * 
-     * @return the stored word text
+     * @return the word text
      */
     public String getWordText() {
         return wordText;
     }
 
     /**
-     * Retrieves the mapping of all files and line numbers.
+     * Retrieves the map of occurrences for this word.
      * Precondition: None.
-     * Postcondition: Returns the internal map of occurrences.
+     * Postcondition: Returns the mapping of file names to line number lists.
      * 
-     * @return map of filenames to line number lists
+     * @return map of file names to line numbers
      */
     public Map<String, List<Integer>> getOccurrences() {
         return occurrences;
     }
 
     /**
-     * Calculates how many times the word was recorded overall.
+     * Calculates the total number of times the word appears across all files.
      * Precondition: None.
-     * During: Sums all lists of line numbers.
-     * Postcondition: Returns the total count of appearances.
+     * Postcondition: Returns the total count of all line numbers stored.
      * 
-     * @return total number of occurrences
+     * @return the total number of occurrences
      */
     public int getFrequency() {
         return occurrences.values().stream().mapToInt(List::size).sum();
     }
 
     /**
-     * Compares this word to another word alphabetically.
+     * Compares this word to another based on alphabetical order.
      * Precondition: other is not null.
-     * Postcondition: Returns negative, zero, or positive integer.
+     * Postcondition: Returns a negative, zero, or positive integer.
      * 
-     * @param other the other Word object to compare against
-     * @return comparison result
+     * @param other the other word to compare
+     * @return result of the comparison
      */
     @Override
     public int compareTo(Word other) {
@@ -94,12 +87,12 @@ public class Word implements Comparable<Word>, Serializable {
     }
 
     /**
-     * Checks if two Word objects are equal based on their text.
-     * Precondition: obj may be any object.
-     * Postcondition: Returns true if obj is a Word with the same text.
+     * Checks if another object is equal to this word based on text.
+     * Precondition: obj can be any object.
+     * Postcondition: Returns true if both words match ignoring case sensitivity.
      * 
      * @param obj the object to compare
-     * @return true if the texts are equal, false otherwise
+     * @return true if equal, false otherwise
      */
     @Override
     public boolean equals(Object obj) {
@@ -110,11 +103,11 @@ public class Word implements Comparable<Word>, Serializable {
     }
 
     /**
-     * Generates a hash code based on the word text.
+     * Computes a hash code for the word.
      * Precondition: None.
-     * Postcondition: Returns hash code consistent with equals().
+     * Postcondition: Hash code based on lowercase word text is returned.
      * 
-     * @return hash code for this Word
+     * @return the hash code
      */
     @Override
     public int hashCode() {
@@ -122,11 +115,11 @@ public class Word implements Comparable<Word>, Serializable {
     }
 
     /**
-     * Returns the word text as its string representation.
+     * Returns the string representation of the word.
      * Precondition: None.
-     * Postcondition: Returns the stored text.
+     * Postcondition: Returns the word text.
      * 
-     * @return the word as a String
+     * @return the word as a string
      */
     @Override
     public String toString() {
