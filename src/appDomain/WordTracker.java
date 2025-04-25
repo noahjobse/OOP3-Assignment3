@@ -1,3 +1,14 @@
+/**
+ * WordTracker.java
+ * Authors: Chris Racicot, Noah Jobse, Jacob Jobse, Parth Dave
+ * Version 2025-04-25
+ * Course: CPRG 304 - OOP3
+ * 
+ * A program that reads text files, extracts words, and tracks 
+ * their occurrences using a Binary Search Tree (BST). It supports options 
+ * to display files, line numbers, and frequency counts, and can persist data.
+ */
+
 package appDomain;
 
 import implementations.BSTree;
@@ -8,8 +19,17 @@ import java.io.*;
 import java.util.*;
 
 public class WordTracker {
+
+    /** Serialized repository file for persisting the tree across sessions */
     private static final String REPO_FILE = "repository.ser";
 
+    /**
+     * Main entry point for the WordTracker application.
+     * Parses arguments, loads tree, processes the input file,
+     * updates the tree, saves it, and then prints output or writes to file.
+     * 
+     * @param args Command-line arguments (input file, flags, optional output file)
+     */
     public static void main(String[] args) {
         if (args.length < 2) {
             System.out.println("Usage: java -jar WordTracker.jar <input.txt> -pf|-pl|-po [-f<output.txt>]");
@@ -20,28 +40,35 @@ public class WordTracker {
         String flag = args[1];
         String outputFile = (args.length == 3 && args[2].startsWith("-f")) ? args[2].substring(2) : null;
 
-        // Load existing tree from repository
+        // Load previously saved BST or start a new one if repo file doesn't exist
         BSTreeADT<Word> bst = loadTree();
 
-        // Parse input file and update tree
+        // Parse the input file and update the BST accordingly
         try (BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
             String line;
             int lineNumber = 1;
+
             while ((line = reader.readLine()) != null) {
+                // Tokenize line by stripping punctuation and whitespace
                 StringTokenizer tokenizer = new StringTokenizer(line, " \t\n\r\f.,!?;:\"()[]{}<>");
 
                 while (tokenizer.hasMoreTokens()) {
                     String wordText = tokenizer.nextToken().toLowerCase();
                     Word temp = new Word(wordText);
+
+                    // Search for existing word in the BST
                     Word found = (bst.contains(temp)) ? bst.search(temp).getElement() : null;
 
                     if (found != null) {
+                        // If found, add this new occurrence to existing Word
                         found.addOccurrence(inputFile, lineNumber);
                     } else {
+                        // Otherwise, create new Word entry and add to BST
                         temp.addOccurrence(inputFile, lineNumber);
                         bst.add(temp);
                     }
                 }
+
                 lineNumber++;
             }
         } catch (IOException e) {
@@ -49,41 +76,42 @@ public class WordTracker {
             return;
         }
 
+        // Save updated tree back to the repository
+        saveTree(bst);
         System.out.println("File processed and tree updated.");
 
-        // === Output generation ===
+        // Generate output in alphabetical order
         Iterator<Word> iterator = bst.inorderIterator();
         StringBuilder output = new StringBuilder();
+        int wordIndex = 1;
 
         while (iterator.hasNext()) {
             Word word = iterator.next();
-            output.append(word.getWordText());
+            output.append(wordIndex++).append(" Key : ").append(word.getWordText()).append("\n");
 
             Map<String, List<Integer>> occurrences = word.getOccurrences();
 
             if (flag.equals("-pf")) {
-                // Show filenames only
-                List<String> sortedFiles = new ArrayList<>(occurrences.keySet());
-                Collections.sort(sortedFiles);
-                output.append(" - ").append(sortedFiles);
-            } else if (flag.equals("-pl") || flag.equals("-po")) {
-                // Show filenames and line numbers (sorted alphabetically)
-                List<String> sortedFiles = new ArrayList<>(occurrences.keySet());
-                Collections.sort(sortedFiles);
-
-                for (String file : sortedFiles) {
-                    output.append("\n  ").append(file).append(": ").append(occurrences.get(file));
+                for (String file : occurrences.keySet()) {
+                    output.append("  Found in file: ").append(file).append("\n");
                 }
 
-                if (flag.equals("-po")) {
-                    output.append("\n  Total occurrences: ").append(word.getFrequency());
+            } else if (flag.equals("-pl")) {
+                for (String file : occurrences.keySet()) {
+                    output.append("  Found in file: ").append(file)
+                          .append(" on lines: ").append(occurrences.get(file)).append("\n");
                 }
+
+            } else if (flag.equals("-po")) {
+                for (String file : occurrences.keySet()) {
+                    output.append("  Found in file: ").append(file)
+                          .append(" on lines: ").append(occurrences.get(file)).append("\n");
+                }
+                output.append("  Total occurrences: ").append(word.getFrequency()).append("\n");
             }
-
-            output.append("\n");
         }
 
-        // === Output to file or console ===
+        // Output to file if -f flag is set, otherwise print to console
         if (outputFile != null) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
                 writer.write(output.toString());
@@ -94,11 +122,13 @@ public class WordTracker {
         } else {
             System.out.println(output.toString());
         }
-
-        // Save updated tree at the very end
-        saveTree(bst);
     }
 
+    /**
+     * Loads a previously saved BSTree object from the serialized file.
+     * 
+     * @return the loaded BST, or a new BST if file does not exist or fails to load
+     */
     private static BSTreeADT<Word> loadTree() {
         File file = new File(REPO_FILE);
         if (!file.exists()) return new BSTree<>();
@@ -106,11 +136,16 @@ public class WordTracker {
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
             return (BSTreeADT<Word>) in.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Failed to load existing tree. Starting fresh.");
+            System.err.println("Could not load existing repository. Starting new tree.");
             return new BSTree<>();
         }
     }
 
+    /**
+     * Serializes the BSTree to the repository file for reuse across executions.
+     * 
+     * @param tree the BSTree instance to save
+     */
     private static void saveTree(BSTreeADT<Word> tree) {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(REPO_FILE))) {
             out.writeObject(tree);
