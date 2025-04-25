@@ -2,11 +2,10 @@ package appDomain;
 
 import implementations.BSTree;
 import utilities.BSTreeADT;
+import utilities.Iterator;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class WordTracker {
     private static final String REPO_FILE = "repository.ser";
@@ -18,6 +17,9 @@ public class WordTracker {
         }
 
         String inputFile = args[0];
+        String flag = args[1];
+        String outputFile = (args.length == 3 && args[2].startsWith("-f")) ? args[2].substring(2) : null;
+
         BSTreeADT<Word> bst = loadTree();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
@@ -47,6 +49,43 @@ public class WordTracker {
 
         saveTree(bst);
         System.out.println("✅ File processed and tree updated.");
+
+        // === Output generation ===
+        Iterator<Word> iterator = bst.inorderIterator();
+        StringBuilder output = new StringBuilder();
+
+        while (iterator.hasNext()) {
+            Word word = iterator.next();
+            output.append(word.getWordText());
+
+            Map<String, List<Integer>> occurrences = word.getOccurrences();
+
+            if (flag.equals("-pf")) {
+                output.append(" - ").append(occurrences.keySet());
+            } else if (flag.equals("-pl")) {
+                for (String file : occurrences.keySet()) {
+                    output.append("\n  ").append(file).append(": ").append(occurrences.get(file));
+                }
+            } else if (flag.equals("-po")) {
+                for (String file : occurrences.keySet()) {
+                    output.append("\n  ").append(file).append(": ").append(occurrences.get(file));
+                }
+                output.append("\n  Total occurrences: ").append(word.getFrequency());
+            }
+
+            output.append("\n");
+        }
+
+        if (outputFile != null) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+                writer.write(output.toString());
+                System.out.println("📁 Output written to file: " + outputFile);
+            } catch (IOException e) {
+                System.err.println("⚠️ Failed to write to output file: " + e.getMessage());
+            }
+        } else {
+            System.out.println(output.toString());
+        }
     }
 
     private static BSTreeADT<Word> loadTree() {
