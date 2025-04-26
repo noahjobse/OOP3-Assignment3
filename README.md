@@ -37,8 +37,7 @@ Additional Information:
 - Javadoc documentation for the project is available in the /doc folder.
 - Unit tests for key components are included under /unitTests.
 
-
-How to run the WordTracker from Eclipse:
+Steps to run Word Tracker from Eclipse:
 1. For clean testing, delete repository.ser and results.txt (if they exist).  
 2. To match the output in the assignment PDF, test in this order:
    2.1. java -jar WordTracker.jar res\test1.txt -pf
@@ -47,11 +46,12 @@ How to run the WordTracker from Eclipse:
 3. Review the output carefully.
 
 How to Run WordTracker from Command Prompt
+
 1. Open Command Prompt:
 - Press Win + R, type cmd, and hit Enter.
 
 2. Navigate to your project folder:
-- cd to the project folder
+- Use the cd (change directory) command to go to the folder where your project is saved.
 Example:
 cd C:\OOP3\assignments\OOP3-Assignment3
 
@@ -68,7 +68,3 @@ Examples:
 
 - Analyze test3.txt and output to a file called results.txt:
   java -jar WordTracker.jar res\test3.txt -po -fresults.txt
-
----
-
-Thank you for using WordTracker!
